@@ -198,6 +198,18 @@
   .cs-cb .cfill.pos { background: var(--pos); }
   .cs-cb .cfill.neg { background: var(--neg); }
   #cs-insight { margin-top: 24px; }
+
+  /* ===== Sales mix ===== */
+  .mix-row { grid-template-columns: 1.6fr 1fr 1fr 1fr 1fr 34px !important; }
+  .mix-banner { text-align: center; padding: 28px; margin-top: 24px; }
+  .mix-banner .tag { font-size: 13px; color: var(--muted); font-weight: 550; margin-bottom: 8px; }
+  .mix-banner .big { font-size: 46px; font-weight: 700; letter-spacing: -.03em; line-height: 1; font-variant-numeric: tabular-nums; }
+  .mix-banner .cap { font-size: 14.5px; color: var(--muted); margin-top: 12px; }
+  .mix-banner .cap b { color: var(--ink); font-weight: 600; }
+  .mix-compare { margin-top: 24px; }
+  .mix-compare .profit.pos { color: var(--pos); }
+  .mix-compare .profit.neg { color: var(--neg); }
+  #mix-insight { margin-top: 24px; }
 </style>
 </head>
 <body>
@@ -362,6 +374,68 @@
 
     <div class="footnote">
       Прибыль товара = (цена − себестоимость) × продаж. «Прибыль без них» — сколько осталось бы, если убрать убыточные позиции (без учёта эффекта на спрос остальных).
+    </div>
+  </section>
+
+  <!-- ================= SALES MIX EFFECT ================= -->
+  <section class="section">
+    <div class="sec-head">
+      <div class="eyebrow">Эффект микса</div>
+      <h1>Средняя себестоимость ≠ себестоимость продаж</h1>
+      <p class="sub">Один и тот же ассортимент, одни и те же цены и себестоимости. Меняется только структура продаж — что именно покупают. Средняя себестоимость по каталогу одинаковая, а реальная себестоимость продаж, маржа и прибыль — разные.</p>
+    </div>
+
+    <div class="card cs-card">
+      <div class="cs-table">
+        <div class="cs-row mix-row cs-head">
+          <div class="cs-name">Товар</div>
+          <div>Цена ₽</div>
+          <div>Себест. ₽</div>
+          <div>Объём A</div>
+          <div>Объём B</div>
+          <div class="cs-x"></div>
+        </div>
+        <div id="mix-rows"></div>
+      </div>
+      <button id="mix-add" class="cs-add">+ Добавить товар</button>
+    </div>
+
+    <div class="card mix-banner">
+      <div class="tag">Простая средняя себестоимость по каталогу</div>
+      <div class="big" id="mix-avgcost">—</div>
+      <div class="cap">Считается без учёта объёмов — <b>одинакова для обоих наборов</b>. Но продаётся-то разное.</div>
+    </div>
+
+    <div class="card compare mix-compare">
+      <div class="scen">
+        <div class="name" id="mix-a-name">Набор A</div>
+        <div class="profit" id="mix-a-profit">—</div>
+        <div class="rows">
+          <div class="r"><span>Себест. продаж / ед</span><span id="mix-a-cost">—</span></div>
+          <div class="r"><span>Цена продажи / ед</span><span id="mix-a-price">—</span></div>
+          <div class="r"><span>Маржа</span><span id="mix-a-margin">—</span></div>
+          <div class="r"><span>Продано</span><span id="mix-a-units">—</span></div>
+        </div>
+      </div>
+      <div class="scen">
+        <div class="name" id="mix-b-name">Набор B</div>
+        <div class="profit" id="mix-b-profit">—</div>
+        <div class="rows">
+          <div class="r"><span>Себест. продаж / ед</span><span id="mix-b-cost">—</span></div>
+          <div class="r"><span>Цена продажи / ед</span><span id="mix-b-price">—</span></div>
+          <div class="r"><span>Маржа</span><span id="mix-b-margin">—</span></div>
+          <div class="r"><span>Продано</span><span id="mix-b-units">—</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card insight" id="mix-insight">
+      <div class="ic" id="mix-ic">🔀</div>
+      <div class="tx" id="mix-tx"></div>
+    </div>
+
+    <div class="footnote">
+      Себестоимость продаж / ед = Σ(себест.×объём) ÷ Σ(объём) — средневзвешенная по реальным продажам. Средняя по каталогу — простое среднее себестоимостей, без объёмов.
     </div>
   </section>
 </div>
@@ -601,6 +675,102 @@
 
   renderCsInputs();
   csCalc();
+
+  /* ================= SALES MIX EFFECT ================= */
+  let mixData = [
+    { name: 'Премиум',  price: 2000, cost: 800, qtyA: 50,  qtyB: 300 },
+    { name: 'Средний',  price: 1000, cost: 600, qtyA: 100, qtyB: 100 },
+    { name: 'Бюджет',   price: 500,  cost: 450, qtyA: 300, qtyB: 50  },
+  ];
+
+  const mixRows = $('mix-rows');
+
+  function renderMixInputs(){
+    mixRows.innerHTML = '';
+    mixData.forEach((it, i) => {
+      const row = document.createElement('div');
+      row.className = 'cs-row mix-row';
+      row.innerHTML = `
+        <input class="cs-name-in" data-i="${i}" data-k="name" value="${(it.name||'').replace(/"/g,'&quot;')}" />
+        <input type="number" step="any" data-i="${i}" data-k="price" value="${it.price}" />
+        <input type="number" step="any" data-i="${i}" data-k="cost" value="${it.cost}" />
+        <input type="number" step="any" data-i="${i}" data-k="qtyA" value="${it.qtyA}" />
+        <input type="number" step="any" data-i="${i}" data-k="qtyB" value="${it.qtyB}" />
+        <button class="cs-del" data-del="${i}" title="Удалить">×</button>`;
+      mixRows.appendChild(row);
+    });
+    mixRows.querySelectorAll('input').forEach(inp => {
+      inp.addEventListener('input', e => {
+        const i = +e.target.dataset.i, k = e.target.dataset.k;
+        mixData[i][k] = k === 'name' ? e.target.value : (parseFloat(e.target.value) || 0);
+        mixCalc();
+      });
+    });
+    mixRows.querySelectorAll('.cs-del').forEach(btn => {
+      btn.addEventListener('click', e => {
+        mixData.splice(+e.target.dataset.del, 1);
+        renderMixInputs(); mixCalc();
+      });
+    });
+  }
+
+  function aggMix(key){
+    let units = 0, cogs = 0, rev = 0;
+    mixData.forEach(it => {
+      const q = it[key] || 0;
+      units += q; cogs += it.cost * q; rev += it.price * q;
+    });
+    const profit = rev - cogs;
+    return {
+      units, profit,
+      unitCost:  units > 0 ? cogs / units : 0,
+      unitPrice: units > 0 ? rev / units : 0,
+      margin:    rev > 0 ? profit / rev * 100 : 0,
+    };
+  }
+
+  function mixCalc(){
+    const simpleAvg = mixData.length
+      ? mixData.reduce((s,x) => s + (x.cost||0), 0) / mixData.length : 0;
+    $('mix-avgcost').textContent = fmtMoney(simpleAvg);
+
+    const A = aggMix('qtyA'), B = aggMix('qtyB');
+
+    const fill = (p, d) => {
+      $(`mix-${p}-profit`).textContent = fmtMoney(d.profit);
+      $(`mix-${p}-profit`).className = 'profit ' + (d.profit < 0 ? 'neg' : 'pos');
+      $(`mix-${p}-cost`).textContent  = fmtMoney(d.unitCost);
+      $(`mix-${p}-price`).textContent = fmtMoney(d.unitPrice);
+      $(`mix-${p}-margin`).textContent = fmtPct(d.margin).replace('+','');
+      $(`mix-${p}-units`).textContent = Math.round(d.units).toLocaleString('ru-RU') + ' шт';
+    };
+    fill('a', A); fill('b', B);
+
+    // insight
+    const box = $('mix-insight'), tx = $('mix-tx'), ic = $('mix-ic');
+    const costDiff = B.unitCost - A.unitCost;
+    const marginDiff = B.margin - A.margin;
+    const better = B.profit >= A.profit ? 'B' : 'A';
+    const hi = better === 'B' ? B : A, lo = better === 'B' ? A : B;
+    const profitGap = hi.profit - lo.profit;
+
+    if (!mixData.length){
+      box.className = 'card insight'; ic.textContent = '🔀';
+      tx.innerHTML = 'Добавьте товары и задайте два варианта объёмов продаж.';
+    } else {
+      box.className = 'card insight ' + (Math.abs(marginDiff) > 0.5 ? 'warn' : 'ok');
+      ic.textContent = '🔀';
+      tx.innerHTML = `Средняя себестоимость по каталогу одинаковая — <b>${fmtMoney(simpleAvg)}</b>. Но себестоимость продаж разная: <b>${fmtMoney(A.unitCost)}</b> в наборе A против <b>${fmtMoney(B.unitCost)}</b> в B (разница <span class="accent">${fmtMoney(Math.abs(costDiff))}</span> на единицу). Из-за перекоса структуры маржа отличается на <span class="accent">${fmtPct(Math.abs(marginDiff)).replace('+','')} п.п.</span>, а прибыль — на <b>${fmtMoney(profitGap)}</b> в пользу набора <b>${better}</b>. Один и тот же товар, один и тот же прайс — разный итог только из-за того, <i>что именно покупают</i>.`;
+    }
+  }
+
+  $('mix-add').addEventListener('click', () => {
+    mixData.push({ name: 'Новый товар', price: 1000, cost: 700, qtyA: 50, qtyB: 50 });
+    renderMixInputs(); mixCalc();
+  });
+
+  renderMixInputs();
+  mixCalc();
 </script>
 </body>
 </html>
