@@ -134,7 +134,7 @@
   .delta-chip.neg { color: var(--neg); background: var(--neg-bg); }
   .delta-chip.pos { color: var(--pos); background: var(--pos-bg); }
 
-  /* ===== Cross-subsidization ===== */
+  /* ===== Shared section / table styles ===== */
   .section { margin-top: 64px; padding-top: 48px; border-top: 1px solid var(--line); }
   .sec-head { margin-bottom: 28px; }
 
@@ -175,29 +175,6 @@
     border-radius: 10px; cursor: pointer; transition: border-color .15s, color .15s;
   }
   .cs-add:hover { border-color: var(--ink); color: var(--ink); }
-
-  .cs-results { display: grid; grid-template-columns: repeat(3,1fr); gap: 24px; margin-top: 24px; }
-  @media (max-width: 720px){ .cs-results { grid-template-columns: 1fr; } }
-  .cs-stat { padding: 22px 24px; }
-  .cs-stat .lbl { font-size: 12.5px; letter-spacing:.03em; text-transform: uppercase; color: var(--muted); font-weight: 600; margin-bottom: 10px; }
-  .cs-stat .val { font-size: 30px; font-weight: 700; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
-  .cs-stat .val.neg { color: var(--neg); }
-  .cs-stat .val.pos { color: var(--pos); }
-  .cs-stat .hint { font-size: 13px; color: var(--muted); margin-top: 8px; }
-
-  .cs-bars { padding: 26px; margin-top: 24px; }
-  .cs-bars h3 { font-size: 13px; letter-spacing:.04em; text-transform: uppercase; color: var(--muted); font-weight: 600; margin-bottom: 20px; }
-  .cs-cb { margin-bottom: 16px; }
-  .cs-cb:last-child { margin-bottom: 0; }
-  .cs-cb .cl { display: flex; justify-content: space-between; font-size: 13.5px; margin-bottom: 7px; }
-  .cs-cb .cl .nm { font-weight: 600; }
-  .cs-cb .cl .vl { font-weight: 600; font-variant-numeric: tabular-nums; }
-  .cs-cb .cl .vl.neg { color: var(--neg); }
-  .cs-cb .ctrack { display: flex; height: 12px; background: #f0f0ee; border-radius: 99px; overflow: hidden; }
-  .cs-cb .cfill { height: 100%; transition: width .4s cubic-bezier(.4,0,.2,1); }
-  .cs-cb .cfill.pos { background: var(--pos); }
-  .cs-cb .cfill.neg { background: var(--neg); }
-  #cs-insight { margin-top: 24px; }
 
   /* ===== Sales mix ===== */
   .mix-row { grid-template-columns: 1.6fr 1fr 1fr 1fr 1fr 34px !important; }
@@ -319,63 +296,6 @@
       </div>
     </div>
   </div>
-
-  <!-- ================= CROSS-SUBSIDIZATION ================= -->
-  <section class="section">
-    <div class="sec-head">
-      <div class="eyebrow">Эффект 80/20</div>
-      <h1>Перекрёстное субсидирование</h1>
-      <p class="sub">Средняя маржа врёт. Часть товаров убыточна, но прячется за прибыльными — «здоровый» бизнес на деле кормит мёртвый груз. Введите ассортимент и увидите, кто зарабатывает, а кто проедает прибыль.</p>
-    </div>
-
-    <div class="card cs-card">
-      <div class="cs-table">
-        <div class="cs-row cs-head">
-          <div class="cs-name">Товар</div>
-          <div>Цена ₽</div>
-          <div>Себест. ₽</div>
-          <div>Продаж</div>
-          <div class="cs-prof">Прибыль</div>
-          <div class="cs-margin">Маржа</div>
-          <div class="cs-x"></div>
-        </div>
-        <div id="cs-rows"></div>
-      </div>
-      <button id="cs-add" class="cs-add">+ Добавить товар</button>
-    </div>
-
-    <div class="cs-results">
-      <div class="card cs-stat">
-        <div class="lbl">Итоговая прибыль</div>
-        <div class="val" id="cs-total">—</div>
-        <div class="hint" id="cs-blended">—</div>
-      </div>
-      <div class="card cs-stat">
-        <div class="lbl">Убыточные товары</div>
-        <div class="val neg" id="cs-loss-count">—</div>
-        <div class="hint" id="cs-loss-sum">—</div>
-      </div>
-      <div class="card cs-stat">
-        <div class="lbl">Прибыль без них</div>
-        <div class="val pos" id="cs-potential">—</div>
-        <div class="hint" id="cs-potential-hint">—</div>
-      </div>
-    </div>
-
-    <div class="card cs-bars">
-      <h3>Вклад каждого товара в прибыль</h3>
-      <div id="cs-contrib"></div>
-    </div>
-
-    <div class="card insight" id="cs-insight">
-      <div class="ic" id="cs-ic">📊</div>
-      <div class="tx" id="cs-tx"></div>
-    </div>
-
-    <div class="footnote">
-      Прибыль товара = (цена − себестоимость) × продаж. «Прибыль без них» — сколько осталось бы, если убрать убыточные позиции (без учёта эффекта на спрос остальных).
-    </div>
-  </section>
 
   <!-- ================= SALES MIX EFFECT ================= -->
   <section class="section">
@@ -538,143 +458,6 @@
 
   ids.forEach(id => $(id).addEventListener('input', calc));
   calc();
-
-  /* ================= CROSS-SUBSIDIZATION ================= */
-  let csData = [
-    { name: 'Хит продаж',     price: 1500, cost: 700,  qty: 200 },
-    { name: 'Стабильный',     price: 1200, cost: 800,  qty: 150 },
-    { name: 'Средний',        price: 900,  cost: 720,  qty: 120 },
-    { name: 'Акционный',      price: 600,  cost: 640,  qty: 180 },
-    { name: 'Залежавшийся',   price: 400,  cost: 520,  qty: 60  },
-  ];
-
-  const csRows = $('cs-rows');
-
-  function renderCsInputs(){
-    csRows.innerHTML = '';
-    csData.forEach((it, i) => {
-      const row = document.createElement('div');
-      row.className = 'cs-row';
-      row.innerHTML = `
-        <input class="cs-name-in" data-i="${i}" data-k="name" value="${it.name.replace(/"/g,'&quot;')}" />
-        <input type="number" step="any" data-i="${i}" data-k="price" value="${it.price}" />
-        <input type="number" step="any" data-i="${i}" data-k="cost" value="${it.cost}" />
-        <input type="number" step="any" data-i="${i}" data-k="qty" value="${it.qty}" />
-        <div class="cs-prof" data-prof="${i}">—</div>
-        <div class="cs-margin" data-margin="${i}">—</div>
-        <button class="cs-del" data-del="${i}" title="Удалить">×</button>`;
-      csRows.appendChild(row);
-    });
-    csRows.querySelectorAll('input').forEach(inp => {
-      inp.addEventListener('input', e => {
-        const i = +e.target.dataset.i, k = e.target.dataset.k;
-        csData[i][k] = k === 'name' ? e.target.value : (parseFloat(e.target.value) || 0);
-        csCalc();
-      });
-    });
-    csRows.querySelectorAll('.cs-del').forEach(btn => {
-      btn.addEventListener('click', e => {
-        csData.splice(+e.target.dataset.del, 1);
-        renderCsInputs(); csCalc();
-      });
-    });
-  }
-
-  function csCalc(){
-    const items = csData.map(it => {
-      const profit = (it.price - it.cost) * it.qty;
-      const margin = it.price > 0 ? (it.price - it.cost) / it.price * 100 : 0;
-      return { ...it, profit, margin };
-    });
-
-    const total = items.reduce((s,x) => s + x.profit, 0);
-    const losers = items.filter(x => x.profit < 0);
-    const lossSum = losers.reduce((s,x) => s + x.profit, 0);
-    const potential = total - lossSum; // прибыль без убыточных
-
-    const revenue = items.reduce((s,x) => s + x.price * x.qty, 0);
-    const cogs = items.reduce((s,x) => s + x.cost * x.qty, 0);
-    const blended = revenue > 0 ? (revenue - cogs) / revenue * 100 : 0;
-
-    // per-row figures
-    items.forEach((x,i) => {
-      const pe = csRows.querySelector(`[data-prof="${i}"]`);
-      const me = csRows.querySelector(`[data-margin="${i}"]`);
-      const rowEl = pe ? pe.closest('.cs-row') : null;
-      if (pe){ pe.textContent = fmtMoney(x.profit); pe.className = 'cs-prof ' + (x.profit < 0 ? 'neg' : 'pos'); }
-      if (me){ me.textContent = fmtPct(x.margin).replace('+',''); me.className = 'cs-margin ' + (x.margin < 0 ? 'neg' : 'pos'); }
-      if (rowEl) rowEl.classList.toggle('is-loss', x.profit < 0);
-    });
-
-    // stats
-    $('cs-total').textContent = fmtMoney(total);
-    $('cs-blended').textContent = `Средняя маржа по выручке: ${fmtPct(blended).replace('+','')}`;
-
-    $('cs-loss-count').textContent = losers.length;
-    $('cs-loss-sum').textContent = losers.length
-      ? `Съедают ${fmtMoney(-lossSum)} прибыли`
-      : 'Все товары прибыльны 👍';
-
-    $('cs-potential').textContent = fmtMoney(potential);
-    $('cs-potential-hint').textContent = (losers.length && total > 0)
-      ? `На ${fmtPct((potential/total - 1)*100).replace('+','')} больше текущей`
-      : 'Убирать нечего';
-
-    // contribution bars (по модулю прибыли)
-    const maxAbs = Math.max(1, ...items.map(x => Math.abs(x.profit)));
-    const cont = $('cs-contrib');
-    cont.innerHTML = '';
-    items
-      .map((x,i)=>({...x,i}))
-      .sort((a,b)=> b.profit - a.profit)
-      .forEach(x => {
-        const share = total > 0 && x.profit > 0 ? ` · ${(x.profit/total*100).toFixed(0)}% прибыли` : '';
-        const w = Math.abs(x.profit) / maxAbs * 100;
-        const el = document.createElement('div');
-        el.className = 'cs-cb';
-        el.innerHTML = `
-          <div class="cl">
-            <span class="nm">${(x.name||'Без названия')}</span>
-            <span class="vl ${x.profit<0?'neg':''}">${fmtMoney(x.profit)}${share}</span>
-          </div>
-          <div class="ctrack"><div class="cfill ${x.profit<0?'neg':'pos'}" style="width:${w}%"></div></div>`;
-        cont.appendChild(el);
-      });
-
-    // insight
-    const box = $('cs-insight'), tx = $('cs-tx'), ic = $('cs-ic');
-    if (!items.length){
-      box.className = 'card insight'; ic.textContent = '📊';
-      tx.innerHTML = 'Добавьте товары, чтобы увидеть структуру прибыли.';
-    } else if (losers.length){
-      box.className = 'card insight warn'; ic.textContent = '⚠️';
-      const lossShare = total > 0 ? (-lossSum/potential*100) : 0;
-      tx.innerHTML = `<b>${losers.length}</b> ${pl(losers.length,'товар','товара','товаров')} продаются в убыток и забирают <b>${fmtMoney(-lossSum)}</b> — это <b>${fmtPct(lossShare).replace('+','')}</b> от того, что зарабатывают остальные. Средняя маржа <b>${fmtPct(blended).replace('+','')}</b> это маскирует: на бумаге всё «нормально», а по факту прибыльные позиции субсидируют убыточные.`;
-    } else {
-      box.className = 'card insight ok'; ic.textContent = '✅';
-      // топ-вклад
-      const sorted = [...items].sort((a,b)=>b.profit-a.profit);
-      const topCount = Math.max(1, Math.round(items.length*0.2));
-      const topProfit = sorted.slice(0, topCount).reduce((s,x)=>s+x.profit,0);
-      const topShare = total>0 ? topProfit/total*100 : 0;
-      tx.innerHTML = `Убыточных позиций нет. При этом топ-<b>${topCount}</b> ${pl(topCount,'товар','товара','товаров')} дают <b>${fmtPct(topShare).replace('+','')}</b> всей прибыли — классическое правило 80/20. Береги эти позиции сильнее всего.`;
-    }
-  }
-
-  function pl(n, one, few, many){
-    const m10 = n % 10, m100 = n % 100;
-    if (m10 === 1 && m100 !== 11) return one;
-    if (m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14)) return few;
-    return many;
-  }
-
-  $('cs-add').addEventListener('click', () => {
-    csData.push({ name: 'Новый товар', price: 1000, cost: 700, qty: 50 });
-    renderCsInputs(); csCalc();
-  });
-
-  renderCsInputs();
-  csCalc();
 
   /* ================= SALES MIX EFFECT ================= */
   let mixData = [
