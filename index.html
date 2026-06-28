@@ -401,7 +401,7 @@
     </div>
 
     <div class="card mix-banner">
-      <div class="tag">Простая средняя себестоимость по каталогу</div>
+      <div class="tag">Простая средняя себестоимость по каталогу (доля в цене)</div>
       <div class="big" id="mix-avgcost">—</div>
       <div class="cap">Считается без учёта объёмов — <b>одинакова для обоих наборов</b>. Но продаётся-то разное.</div>
     </div>
@@ -411,7 +411,7 @@
         <div class="name" id="mix-a-name">Набор A</div>
         <div class="profit" id="mix-a-profit">—</div>
         <div class="rows">
-          <div class="r"><span>Себест. продаж / ед</span><span id="mix-a-cost">—</span></div>
+          <div class="r"><span>Себестоимость продаж, %</span><span id="mix-a-cost">—</span></div>
           <div class="r"><span>Цена продажи / ед</span><span id="mix-a-price">—</span></div>
           <div class="r"><span>Маржа</span><span id="mix-a-margin">—</span></div>
           <div class="r"><span>Продано</span><span id="mix-a-units">—</span></div>
@@ -421,7 +421,7 @@
         <div class="name" id="mix-b-name">Набор B</div>
         <div class="profit" id="mix-b-profit">—</div>
         <div class="rows">
-          <div class="r"><span>Себест. продаж / ед</span><span id="mix-b-cost">—</span></div>
+          <div class="r"><span>Себестоимость продаж, %</span><span id="mix-b-cost">—</span></div>
           <div class="r"><span>Цена продажи / ед</span><span id="mix-b-price">—</span></div>
           <div class="r"><span>Маржа</span><span id="mix-b-margin">—</span></div>
           <div class="r"><span>Продано</span><span id="mix-b-units">—</span></div>
@@ -435,7 +435,7 @@
     </div>
 
     <div class="footnote">
-      Себестоимость продаж / ед = Σ(себест.×объём) ÷ Σ(объём) — средневзвешенная по реальным продажам. Средняя по каталогу — простое среднее себестоимостей, без объёмов.
+      Себестоимость продаж, % = Σ(себест.×объём) ÷ Σ(цена×объём) — доля себестоимости в выручке с учётом структуры продаж. Средняя по каталогу, % — простое среднее отношения себест. ÷ цена по позициям, без объёмов.
     </div>
   </section>
 </div>
@@ -723,23 +723,24 @@
     const profit = rev - cogs;
     return {
       units, profit,
-      unitCost:  units > 0 ? cogs / units : 0,
+      costPct:   rev > 0 ? cogs / rev * 100 : 0,
       unitPrice: units > 0 ? rev / units : 0,
       margin:    rev > 0 ? profit / rev * 100 : 0,
     };
   }
 
   function mixCalc(){
-    const simpleAvg = mixData.length
-      ? mixData.reduce((s,x) => s + (x.cost||0), 0) / mixData.length : 0;
-    $('mix-avgcost').textContent = fmtMoney(simpleAvg);
+    // средняя себестоимость по каталогу как доля в цене (без учёта объёмов)
+    const ratios = mixData.filter(x => x.price > 0).map(x => x.cost / x.price * 100);
+    const simpleAvg = ratios.length ? ratios.reduce((s,v)=>s+v,0) / ratios.length : 0;
+    $('mix-avgcost').textContent = fmtPct(simpleAvg).replace('+','');
 
     const A = aggMix('qtyA'), B = aggMix('qtyB');
 
     const fill = (p, d) => {
       $(`mix-${p}-profit`).textContent = fmtMoney(d.profit);
       $(`mix-${p}-profit`).className = 'profit ' + (d.profit < 0 ? 'neg' : 'pos');
-      $(`mix-${p}-cost`).textContent  = fmtMoney(d.unitCost);
+      $(`mix-${p}-cost`).textContent  = fmtPct(d.costPct).replace('+','');
       $(`mix-${p}-price`).textContent = fmtMoney(d.unitPrice);
       $(`mix-${p}-margin`).textContent = fmtPct(d.margin).replace('+','');
       $(`mix-${p}-units`).textContent = Math.round(d.units).toLocaleString('ru-RU') + ' шт';
@@ -748,7 +749,7 @@
 
     // insight
     const box = $('mix-insight'), tx = $('mix-tx'), ic = $('mix-ic');
-    const costDiff = B.unitCost - A.unitCost;
+    const costDiff = B.costPct - A.costPct;
     const marginDiff = B.margin - A.margin;
     const better = B.profit >= A.profit ? 'B' : 'A';
     const hi = better === 'B' ? B : A, lo = better === 'B' ? A : B;
@@ -760,7 +761,7 @@
     } else {
       box.className = 'card insight ' + (Math.abs(marginDiff) > 0.5 ? 'warn' : 'ok');
       ic.textContent = '🔀';
-      tx.innerHTML = `Средняя себестоимость по каталогу одинаковая — <b>${fmtMoney(simpleAvg)}</b>. Но себестоимость продаж разная: <b>${fmtMoney(A.unitCost)}</b> в наборе A против <b>${fmtMoney(B.unitCost)}</b> в B (разница <span class="accent">${fmtMoney(Math.abs(costDiff))}</span> на единицу). Из-за перекоса структуры маржа отличается на <span class="accent">${fmtPct(Math.abs(marginDiff)).replace('+','')} п.п.</span>, а прибыль — на <b>${fmtMoney(profitGap)}</b> в пользу набора <b>${better}</b>. Один и тот же товар, один и тот же прайс — разный итог только из-за того, <i>что именно покупают</i>.`;
+      tx.innerHTML = `Средняя себестоимость по каталогу одинаковая — <b>${fmtPct(simpleAvg).replace('+','')}</b> от цены. Но себестоимость продаж разная: <b>${fmtPct(A.costPct).replace('+','')}</b> в наборе A против <b>${fmtPct(B.costPct).replace('+','')}</b> в B (разница <span class="accent">${fmtPct(Math.abs(costDiff)).replace('+','')} п.п.</span>). Из-за перекоса структуры маржа отличается на <span class="accent">${fmtPct(Math.abs(marginDiff)).replace('+','')} п.п.</span>, а прибыль — на <b>${fmtMoney(profitGap)}</b> в пользу набора <b>${better}</b>. Один и тот же товар, один и тот же прайс — разный итог только из-за того, <i>что именно покупают</i>.`;
     }
   }
 
